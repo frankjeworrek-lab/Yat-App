@@ -13,16 +13,20 @@ class ChatView:
         
     def build(self):
         """Build the chat view UI with professional dark theme"""
-        with ui.column().classes('flex-1 overflow-auto p-6 gap-4').style(
+        # Main container with scroll area
+        with ui.scroll_area().classes('flex-1 p-6').style(
             'background: linear-gradient(180deg, #0f1117 0%, #1a1d29 100%);'
-        ) as container:
-            self.messages_container = container
+        ) as scroll:
+            self.scroll_area = scroll
             
-            # Welcome message
-            with ui.column().classes('items-center justify-center mt-20 mb-10'):
-                ui.icon('chat_bubble', size='xl').classes('text-blue-400 mb-4')
-                ui.label('Start a conversation').classes('text-2xl font-bold text-gray-200')
-                ui.label('Choose a model and send your first message').classes('text-sm text-gray-500')
+            with ui.column().classes('w-full gap-4') as container:
+                self.messages_container = container
+                
+                # Welcome message
+                with ui.column().classes('items-center justify-center mt-20 mb-10'):
+                    ui.icon('chat_bubble', size='xl').classes('text-blue-400 mb-4')
+                    ui.label('Start a conversation').classes('text-2xl font-bold text-gray-200')
+                    ui.label('Choose a model and send your first message').classes('text-sm text-gray-500')
         
         return self.messages_container
     
@@ -67,12 +71,23 @@ class ChatView:
                     # User Avatar (right side)
                     with ui.avatar().style('background-color: #3b82f6;'):
                         ui.icon('person', size='sm', color='white')
+        
+        # Auto-scroll to bottom
+        self._scroll_to_bottom()
+    
+    def _scroll_to_bottom(self):
+        """Scroll chat to bottom"""
+        if self.scroll_area:
+            # Use NiceGUI's scroll_to method
+            self.scroll_area.scroll_to(percent=1.0)
     
     def update_last_message(self, content: str):
         """Update the content of the last message (for streaming)"""
         if self.message_rows:
             last_msg = self.message_rows[-1]
             last_msg['element'].set_content(content)
+            # Auto-scroll während Streaming
+            self._scroll_to_bottom()
     
     def clear(self):
         """Clear all messages and show welcome screen"""
