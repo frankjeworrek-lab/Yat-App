@@ -15,6 +15,14 @@ class MockProvider(BaseLLMProvider):
         """Mock initialization (always succeeds)"""
         print("✓ Mock Provider initialized")
     
+    async def check_health(self) -> bool:
+        """Mock health check (always healthy)"""
+        return True
+    
+    async def get_models(self) -> list[ModelInfo]:
+        """Get available models (required by base class)"""
+        return await self.get_available_models()
+    
     async def get_available_models(self) -> list[ModelInfo]:
         """Get list of mock models"""
         return [
@@ -36,8 +44,8 @@ class MockProvider(BaseLLMProvider):
     
     async def stream_chat(
         self,
+        model_id: str,
         messages: list[Message],
-        model_id: str = "mock-gpt-4",
         temperature: float = 0.7,
         max_tokens: int = 2000
     ) -> AsyncIterator[str]:

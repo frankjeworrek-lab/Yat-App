@@ -32,6 +32,14 @@ class OpenAIProvider(BaseLLMProvider):
             self.config.init_error = f"Failed to initialize: {str(e)}"
             print(f"✗ OpenAI initialization failed: {e}")
     
+    async def check_health(self) -> bool:
+        """Check if provider is healthy"""
+        return self.client is not None and self.api_key is not None
+    
+    async def get_models(self) -> list[ModelInfo]:
+        """Get available models (required by base class)"""
+        return await self.get_available_models()
+    
     async def get_available_models(self) -> list[ModelInfo]:
         """Get list of available OpenAI models"""
         return [
@@ -60,8 +68,8 @@ class OpenAIProvider(BaseLLMProvider):
     
     async def stream_chat(
         self,
+        model_id: str,
         messages: list[Message],
-        model_id: str = "gpt-4o-search-preview",
         temperature: float = 0.7,
         max_tokens: int = 2000
     ) -> AsyncIterator[str]:
