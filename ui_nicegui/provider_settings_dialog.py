@@ -59,14 +59,28 @@ class ProviderSettingsDialog:
     
     def _build_provider_card(self, provider):
         """Build a card for a single provider"""
-        # Status badge color
-        status_colors = {
-            'active': 'green',
-            'disabled': 'gray',
-            'error': 'red',
-            'offline': 'orange'
-        }
-        status_color = status_colors.get(provider.status, 'gray')
+        # Determine intelligent status
+        is_active = self.llm_manager and provider.id == self.llm_manager.active_provider_id
+        
+        # Check if API key exists
+        api_key_setting = next((s for s in provider.settings if s['key'] == 'api_key'), None)
+        has_key = False
+        if api_key_setting and api_key_setting.get('env_var'):
+            has_key = bool(os.getenv(api_key_setting['env_var']))
+        
+        # Status logic
+        if is_active:
+            status_text = "ACTIVE"
+            status_color = "green"
+            status_icon = "check_circle"
+        elif has_key:
+            status_text = "READY"
+            status_color = "blue"
+            status_icon = "verified"
+        else:
+            status_text = "NO KEY"
+            status_color = "orange"
+            status_icon = "key_off"
         
         with ui.card().classes('w-full mb-4 p-4').style(
             'background-color: #111827; border: 1px solid #374151;'
@@ -82,21 +96,23 @@ class ProviderSettingsDialog:
                         ui.label(provider.name).classes('text-lg font-bold text-white')
                         ui.label(f'{provider.type.capitalize()} Provider').classes('text-xs text-gray-500')
                 
-                # Status and enable toggle
-                with ui.row().classes('items-center gap-3'):
-                    ui.badge(provider.status.capitalize(), color=status_color).classes('text-xs')
-                    
-                    toggle = ui.switch(
-                        value=provider.enabled,
-                        on_change=lambda e, pid=provider.id: self._toggle_provider(pid, e.value)
-                    ).classes('ml-2')
-                    ui.label('Enabled').classes('text-sm text-gray-400')
+                # Status badge and icon
+                with ui.row().classes('items-center gap-2'):
+                    ui.icon(status_icon, size='sm').classes(f'text-{status_color}-400')
+                    ui.badge(status_text, color=status_color).classes('text-xs font-bold')
             
-            # Settings (only show if enabled)
-            if provider.enabled:
-                with ui.column().classes('w-full gap-3 mt-3 pt-3 border-t border-gray-700'):
-                    for setting in provider.settings:
-                        self._build_setting_input(provider, setting)
+            # Info text
+            if is_active:
+                ui.label('🟢 Currently in use for chat').classes('text-xs text-green-400 mb-2')
+            elif has_key:
+                ui.label('💡 Ready to use. Select a model from sidebar to activate.').classes('text-xs text-blue-400 mb-2')
+            else:
+                ui.label('⚠️ API key required. Enter below to enable this provider.').classes('text-xs text-orange-400 mb-2')
+            
+            # Settings (always show, user can configure keys even if not active)
+            with ui.column().classes('w-full gap-3 mt-3 pt-3 border-t border-gray-700'):
+                for setting in provider.settings:
+                    self._build_setting_input(provider, setting)
     
     def _build_setting_input(self, provider, setting):
         """Build an input field for a provider setting"""

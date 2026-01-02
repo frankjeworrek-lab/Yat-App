@@ -80,14 +80,7 @@ class Sidebar:
                 'border-color: #374151;'
             )
             
-            # API Keys Button with modern styling
-            ui.button(
-                'Configure API Keys',
-                icon='key',
-                on_click=self._open_api_keys_dialog
-            ).props('outline').classes('w-full text-gray-300').style(
-                'border-color: #374151;'
-            )
+
     
     def _open_provider_settings(self):
         """Open provider settings dialog"""
@@ -95,11 +88,7 @@ class Sidebar:
         dialog = ProviderSettingsDialog(llm_manager=self.llm_manager)
         dialog.show()
     
-    def _open_api_keys_dialog(self):
-        """Open API keys configuration dialog"""
-        from .api_key_dialog import APIKeyDialog
-        dialog = APIKeyDialog(llm_manager=self.llm_manager)
-        dialog.show()
+
 
     
     async def _refresh_models(self):
