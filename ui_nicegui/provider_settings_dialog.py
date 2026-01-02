@@ -218,6 +218,19 @@ class ProviderSettingsDialog:
                     {setting_key: value}
                 )
         
+        # Re-initialize all providers to pick up new/removed API keys
+        if self.llm_manager:
+            import asyncio
+            async def reinit_providers():
+                for pid, provider in self.llm_manager.providers.items():
+                    try:
+                        await provider.initialize()
+                        print(f"✓ Re-initialized: {pid}")
+                    except Exception as e:
+                        print(f"✗ Re-init failed for {pid}: {e}")
+            
+            asyncio.create_task(reinit_providers())
+        
         # Apply pending provider activation (if any)
         if self.pending_active_provider and self.llm_manager:
             provider_instance = self.llm_manager.providers.get(self.pending_active_provider)
@@ -237,7 +250,7 @@ class ProviderSettingsDialog:
                 
                 asyncio.create_task(set_model())
         
-        ui.notify('Settings saved! Provider activated.', type='positive')
+        ui.notify('Settings saved! Providers reloaded.', type='positive')
         self.dialog.close()
     
     def _update_env_file(self, key: str, value: str):
