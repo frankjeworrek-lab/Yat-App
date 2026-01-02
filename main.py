@@ -199,6 +199,7 @@ def start_desktop_mode():
     import time
     
     print("🚀 Starting Y.A.T. (Desktop Mode)...")
+    print("   Architect: Frank Jeworrek")
     
     def start_nicegui_server():
         """Start NiceGUI server in background thread"""

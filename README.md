@@ -95,3 +95,10 @@ ki_chat_pattern_nicegui/
 
 ---
 *Architected for Flow.*
+
+## 🏆 Credits
+
+**Architect & Lead Design:** Frank Jeworrek
+*Concept, UX Philosophy, and System Architecture.*
+
+**Powered by:** NiceGUI & Antigravity
