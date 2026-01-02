@@ -79,6 +79,7 @@ class InputArea:
         if self.text_input:
             self.text_input.enable()
             try:
-                self.text_input.run_method('focus')
+                # Use a timer to ensure DOM has updated (enabled) before focusing
+                ui.timer(0.1, lambda: self.text_input.run_method('focus'), once=True)
             except:
                 pass
