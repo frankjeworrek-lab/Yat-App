@@ -226,12 +226,25 @@ class ProviderSettingsDialog:
         if self.llm_manager:
             import asyncio
             async def reinit_providers():
-                for pid, provider in self.llm_manager.providers.items():
+                # Determine active provider  ID
+                active_pid = self.pending_active_provider or self.llm_manager.active_provider_id
+                
+                # 1. ACTIVE provider FIRST (critical errors show immediately!)
+                if active_pid and active_pid in self.llm_manager.providers:
                     try:
-                        await provider.initialize()
-                        print(f"✓ Re-initialized: {pid}")
+                        await self.llm_manager.providers[active_pid].initialize()
+                        print(f"✓ Re-initialized (ACTIVE): {active_pid}")
                     except Exception as e:
-                        print(f"✗ Re-init failed for {pid}: {e}")
+                        print(f"✗ Re-init failed (ACTIVE): {active_pid}: {e}")
+                
+                # 2. Other providers (background)
+                for pid, provider in self.llm_manager.providers.items():
+                    if pid != active_pid:
+                        try:
+                            await provider.initialize()
+                            print(f"✓ Re-initialized: {pid}")
+                        except Exception as e:
+                            print(f"✗ Re-init failed: {pid}: {e}")
             
             asyncio.create_task(reinit_providers())
         
