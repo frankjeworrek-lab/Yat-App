@@ -88,6 +88,26 @@ class ProviderSettingsDialog:
             # Header row
             with ui.row().classes('w-full items-center justify-between mb-3'):
                 with ui.row().classes('items-center gap-3'):
+                    # Radio button for activation (only if key exists)
+                    if has_key:
+                        ui.radio(
+                            options=[provider.id],
+                            value=provider.id if is_active else None,
+                            on_change=lambda e, pid=provider.id: self._activate_provider(pid)
+                        ).props('dense').classes('mr-2').style('opacity: 0;').bind_value_to(
+                            self, 'active_provider', forward=lambda v: provider.id if is_active else None
+                        )
+                        # Visual radio indicator
+                        if is_active:
+                            ui.icon('radio_button_checked', size='sm').classes('text-green-400')
+                        else:
+                            ui.button(
+                                icon='radio_button_unchecked',
+                                on_click=lambda pid=provider.id: self._activate_provider(pid)
+                            ).props('flat dense round').classes('text-gray-500 hover:text-blue-400')
+                    else:
+                        ui.icon('radio_button_unchecked', size='sm').classes('text-gray-700').tooltip('Add API key first')
+                    
                     # Icon
                     ui.icon(provider.icon, size='md').classes(f'text-{provider.color}-400')
                     
@@ -151,6 +171,39 @@ class ProviderSettingsDialog:
             
             if setting.get('required'):
                 ui.label('*').classes('text-red-400 text-sm')
+    
+    def _activate_provider(self, provider_id: str):
+        """Activate a provider and select its first model"""
+        if not self.llm_manager:
+            return
+        
+        # Get provider instance
+        provider_instance = self.llm_manager.providers.get(provider_id)
+        if not provider_instance:
+            ui.notify(f'Provider {provider_id} not available', type='warning')
+            return
+        
+        # Set as active provider
+        self.llm_manager.active_provider_id = provider_id
+        
+        # Get first available model from this provider
+        import asyncio
+        async def set_model():
+            try:
+                models = await provider_instance.get_available_models()
+                if models:
+                    self.llm_manager.active_model_id = models[0].id
+                    ui.notify(f'Switched to {models[0].name}', type='positive')
+                else:
+                    ui.notify(f'No models available for {provider_id}', type='warning')
+            except Exception as e:
+                ui.notify(f'Error loading models: {e}', type='negative')
+        
+        asyncio.create_task(set_model())
+        
+        # Refresh dialog to update UI
+        self.dialog.close()
+        self.show()
     
     def _toggle_provider(self, provider_id: str, enabled: bool):
         """Toggle provider enabled/disabled"""
