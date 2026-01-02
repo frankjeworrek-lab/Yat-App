@@ -98,6 +98,7 @@ async def initialize_providers():
     # Strict Config Adherence Logic
     # ------------------------------------------------------------------
     # 1. Load explicit ACTIVE PROVIDER from UserConfig
+    active_provider_id = None
     saved_active_provider = UserConfig.get('active_provider_id')
     
     if saved_active_provider and saved_active_provider in llm_manager.providers:
