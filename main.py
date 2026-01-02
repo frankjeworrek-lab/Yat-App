@@ -1,5 +1,5 @@
 """
-KI Chat Pattern - NiceGUI Application
+Y.A.T. (Yet Another Talk) - NiceGUI Application
 Unified launcher supporting both Desktop (native window) and Web (browser) modes.
 
 Usage:
@@ -18,6 +18,9 @@ load_dotenv(override=True)
 
 # Global LLM Manager (initialized on startup)
 llm_manager = None
+
+# Serve logo directory
+app.add_static_files('/logo', 'logo')
 
 
 async def initialize_providers():
@@ -139,7 +142,7 @@ async def initialize_providers():
     print("✓ Plugin-based providers initialized successfully\n")
 
 
-@ui.page('/')
+@ui.page('/', title='Y.A.T.')
 async def main_page():
     """Main application page"""
     # Remove default padding/gap to prevent scrollbars
@@ -178,9 +181,9 @@ async def main_page():
 
 def start_web_mode():
     """Start in Web/Browser mode"""
-    print("🌐 Starting KI Chat Pattern (Web Mode)...")
+    print("🌐 Starting Y.A.T. (Web Mode)...")
     ui.run(
-        title='KI Chat Pattern',
+        title='Y.A.T.',
         dark=True,
         reload=False,
         show=True,  # Auto-open browser
@@ -195,12 +198,12 @@ def start_desktop_mode():
     import threading
     import time
     
-    print("🚀 Starting KI Chat Pattern (Desktop Mode)...")
+    print("🚀 Starting Y.A.T. (Desktop Mode)...")
     
     def start_nicegui_server():
         """Start NiceGUI server in background thread"""
         ui.run(
-            title='KI Chat Pattern',
+            title='Y.A.T.',
             dark=True,
             reload=False,
             show=False,  # Don't open browser - PyWebView will handle display
@@ -218,7 +221,7 @@ def start_desktop_mode():
     # Create native desktop window with PyWebView
     print("🪟 Creating desktop window...")
     webview.create_window(
-        title='KI Chat Pattern',
+        title='Y.A.T.',
         url='http://localhost:8080',
         width=1200,
         height=800,
@@ -238,7 +241,7 @@ def start_desktop_mode():
 if __name__ in {"__main__", "__mp_main__"}:
     # Parse command line arguments
     parser = argparse.ArgumentParser(
-        description='KI Chat Pattern - AI Chat Application'
+        description='Y.A.T. - AI Chat Application'
     )
     parser.add_argument(
         '--web',

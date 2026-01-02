@@ -24,9 +24,8 @@ class Sidebar:
             'background-color: var(--bg-secondary); border-right: 1px solid var(--border-color);'
         ):
             # Header with gradient
-            with ui.row().classes('w-full items-center gap-3 pb-4'):
-                ui.icon('chat', size='lg').classes('text-blue-400')
-                ui.label('KI Chat').classes('text-2xl font-bold text-white')
+            # Header Banner
+            ui.image('/logo/Gemini_Generated_Image_ki82s1ki82s1ki82.png').classes('w-full rounded-xl shadow-md mb-2')
             
             ui.separator().classes('bg-gray-700')
             
