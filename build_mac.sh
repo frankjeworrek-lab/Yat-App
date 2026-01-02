@@ -35,6 +35,9 @@ pyinstaller main.py \
     --add-data "docs:docs" \
     --collect-all nicegui \
     --collect-all webview \
+    --collect-all openai \
+    --collect-all google \
+    --collect-all anthropic \
     --clean \
     --noconfirm
 

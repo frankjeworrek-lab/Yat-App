@@ -371,26 +371,35 @@ class ProviderSettingsDialog:
         self.dialog.close()
     
     def _update_env_file(self, key: str, value: str):
-        """Update .env file with new value"""
-        env_path = Path('.env')
-        
-        # Read existing .env content
-        env_content = {}
-        if env_path.exists():
-            with open(env_path, 'r') as f:
-                for line in f:
-                    line = line.strip()
-                    if line and not line.startswith('#') and '=' in line:
-                        k, v = line.split('=', 1)
-                        env_content[k.strip()] = v.strip()
-        
-        # Update value
-        if value:
-            env_content[key] = value
-        elif key in env_content:
-            del env_content[key]
-        
-        # Write back
-        with open(env_path, 'w') as f:
-            for k, v in env_content.items():
-                f.write(f'{k}={v}\n')
+        """Update .env file with new value - Safe for bundled app"""
+        try:
+            from core.paths import get_data_path
+            # Use user data directory for persistent env storage
+            env_path = Path(get_data_path('.env'))
+            
+            # Read existing .env content (handle if file doesn't exist)
+            env_content = {}
+            if env_path.exists():
+                try:
+                    with open(env_path, 'r') as f:
+                        for line in f:
+                            line = line.strip()
+                            if line and not line.startswith('#') and '=' in line:
+                                k, v = line.split('=', 1)
+                                env_content[k.strip()] = v.strip()
+                except Exception:
+                    pass # Ignore read errors
+            
+            # Update value
+            if value:
+                env_content[key] = value
+            elif key in env_content:
+                del env_content[key]
+            
+            # Write back
+            with open(env_path, 'w') as f:
+                for k, v in env_content.items():
+                    f.write(f'{k}={v}\n')
+                    
+        except Exception as e:
+            print(f"⚠️ Warning: Could not save .env file (ok in bundled app): {e}")

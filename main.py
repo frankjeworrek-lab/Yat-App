@@ -27,7 +27,12 @@ def resolve_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 # Load secrets from resolved path
-load_dotenv(resolve_path('.env'), override=True)
+# Load secrets from resolved path (bundled defaults)
+load_dotenv(resolve_path('.env'))
+
+# Load secrets from user data directory (user overrides)
+from core.paths import get_data_path
+load_dotenv(get_data_path('.env'), override=True)
 
 # Ensure data directory exists
 from core.paths import ensure_data_dir
