@@ -137,20 +137,20 @@ class Sidebar:
         
         self.model_select.options = options
         
-        # Check for provider errors
+        # Check for provider errors (only show for ACTIVE provider)
         self.status_container.clear()
         has_errors = False
         
-        for pid, provider in self.llm_manager.providers.items():
-            if provider.config.init_error:
-                has_errors = True
-                with self.status_container:
-                    with ui.card().classes('w-full p-2 bg-red-900 bg-opacity-20 border border-red-700'):
-                        with ui.row().classes('items-center gap-2'):
-                            ui.icon('warning', color='amber', size='sm')
-                            ui.label(f"{provider.config.name}: {provider.config.init_error}").classes(
-                                'text-xs text-red-300'
-                            )
+        active_provider = self.llm_manager.providers.get(self.llm_manager.active_provider_id)
+        if active_provider and active_provider.config.init_error:
+            has_errors = True
+            with self.status_container:
+                with ui.card().classes('w-full p-2 bg-red-900 bg-opacity-20 border border-red-700'):
+                    with ui.row().classes('items-center gap-2'):
+                        ui.icon('warning', color='amber', size='sm')
+                        ui.label(f"{active_provider.config.name}: {active_provider.config.init_error}").classes(
+                            'text-xs text-red-300'
+                        )
         
         self.status_container.visible = has_errors
         
