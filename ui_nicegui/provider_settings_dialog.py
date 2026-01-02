@@ -208,9 +208,8 @@ class ProviderSettingsDialog:
         
         asyncio.create_task(set_model())
         
-        # Refresh dialog to update UI
-        self.dialog.close()
-        self.show()
+        # Don't refresh dialog - it would lose unsaved inputs!
+        # User can see the change in sidebar dropdown after closing dialog
     
     def _toggle_provider(self, provider_id: str, enabled: bool):
         """Toggle provider enabled/disabled"""
