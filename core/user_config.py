@@ -1,8 +1,9 @@
 import json
 import os
 from typing import Any, Dict
+from .paths import get_data_path
 
-SETTINGS_FILE = "user_settings.json"
+SETTINGS_FILE = get_data_path("user_settings.json")
 
 class UserConfig:
     @staticmethod

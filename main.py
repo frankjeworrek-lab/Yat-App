@@ -8,19 +8,36 @@ Usage:
 """
 import asyncio
 import argparse
+import sys
+import os
 from dotenv import load_dotenv
 from nicegui import ui, app
 from core.llm_manager import LLMManager
 from core.providers.types import ProviderConfig
 from ui_nicegui.app_layout import AppLayout
 
-load_dotenv(override=True)
+def resolve_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller"""
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+# Load secrets from resolved path
+load_dotenv(resolve_path('.env'), override=True)
+
+# Ensure data directory exists
+from core.paths import ensure_data_dir
+ensure_data_dir()
 
 # Global LLM Manager (initialized on startup)
 llm_manager = None
 
-# Serve logo directory
-app.add_static_files('/logo', 'logo')
+# Serve logo directory from resolved path
+app.add_static_files('/logo', resolve_path('logo'))
 
 
 async def initialize_providers():
@@ -39,7 +56,7 @@ async def initialize_providers():
     config_manager = ProviderConfigManager()
     
     # Auto-discover and load plugins
-    plugin_loader = PluginLoader(plugins_dir="plugins")
+    plugin_loader = PluginLoader(plugins_dir=resolve_path("plugins"))
     plugins = plugin_loader.load_all_plugins()
     
     print(f"\n🔌 Plugin System: Loaded {len(plugins)} plugin(s)")

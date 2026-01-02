@@ -35,11 +35,14 @@ class ProviderConfig:
     error_message: Optional[str] = None
 
 
+from .paths import get_data_path
+
 class ProviderConfigManager:
     """Manages provider configurations"""
     
-    def __init__(self, config_file: str = "provider_config.json"):
-        self.config_file = Path(config_file)
+    def __init__(self, config_file: Optional[str] = None):
+        path_str = config_file or get_data_path("provider_config.json")
+        self.config_file = Path(path_str)
         self.providers: Dict[str, ProviderConfig] = {}
         self.load_config()
     

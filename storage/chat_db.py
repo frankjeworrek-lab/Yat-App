@@ -4,12 +4,13 @@ from datetime import datetime
 from typing import List, Optional, Dict
 from pathlib import Path
 from core.providers.types import Message, Role
+from core.paths import get_data_path
 
 class ChatDatabase:
     """SQLite-basierte Chat-History-Speicherung"""
     
-    def __init__(self, db_path: str = "chat_history.db"):
-        self.db_path = db_path
+    def __init__(self, db_path: Optional[str] = None):
+        self.db_path = db_path or get_data_path("chat_history.db")
         self.init_database()
     
     def init_database(self):

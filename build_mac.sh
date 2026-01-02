@@ -10,21 +10,10 @@ if ! command -v pyinstaller &> /dev/null; then
 fi
 
 # 1. Prepare Icon
-echo "🎨 Generating .icns from logo/dock.png..."
+echo "🎨 Generating .icns from logo/dock.png with Pillow..."
 rm -rf build/icon.iconset
-mkdir -p build/icon.iconset
-
-sips -z 16 16     logo/dock.png --out build/icon.iconset/icon_16x16.png > /dev/null
-sips -z 32 32     logo/dock.png --out build/icon.iconset/icon_16x16@2x.png > /dev/null
-sips -z 32 32     logo/dock.png --out build/icon.iconset/icon_32x32.png > /dev/null
-sips -z 64 64     logo/dock.png --out build/icon.iconset/icon_32x32@2x.png > /dev/null
-sips -z 128 128   logo/dock.png --out build/icon.iconset/icon_128x128.png > /dev/null
-sips -z 256 256   logo/dock.png --out build/icon.iconset/icon_128x128@2x.png > /dev/null
-sips -z 256 256   logo/dock.png --out build/icon.iconset/icon_256x256.png > /dev/null
-sips -z 512 512   logo/dock.png --out build/icon.iconset/icon_256x256@2x.png > /dev/null
-sips -z 512 512   logo/dock.png --out build/icon.iconset/icon_512x512.png > /dev/null
-# Note: 1024x1024 requires source image to be large enough, defaulting to 512 if not
-sips -z 512 512   logo/dock.png --out build/icon.iconset/icon_512x512@2x.png > /dev/null
+# Use python script for high-quality resize with transparency preservation and zoom (crop checkers)
+python3 tools/icon_gen.py logo/dock.png build/icon.iconset 1.6
 
 iconutil -c icns build/icon.iconset -o build/YAT.icns
 
@@ -34,7 +23,7 @@ echo "🔨 Running PyInstaller..."
 # We manually add data folders.
 
 pyinstaller main.py \
-    --name "Y.A.T." \
+    --name "YAT" \
     --windowed \
     --icon "build/YAT.icns" \
     --add-data "logo:logo" \
@@ -48,6 +37,10 @@ pyinstaller main.py \
     --collect-all webview \
     --clean \
     --noconfirm
+
+# Rename correctly
+rm -rf "dist/Y.A.T.app"
+mv "dist/YAT.app" "dist/Y.A.T.app"
 
 echo "✨ Build Complete!"
 echo "👉 You can now drag 'dist/Y.A.T.app' to your Applications folder or Dock."

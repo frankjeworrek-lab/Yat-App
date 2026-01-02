@@ -3,11 +3,18 @@ from pathlib import Path
 from typing import List, Dict, Optional
 import re
 
+import sys
+import os
+
 class DocsManager:
     def __init__(self, docs_path: str = "docs"):
-        # Resolve docs path relative to project root
-        self.base_dir = Path(__file__).parent.parent
-        self.docs_dir = self.base_dir / docs_path
+        # Resolve docs path logic for PyInstaller
+        try:
+            base_dir = Path(sys._MEIPASS)
+        except AttributeError:
+            base_dir = Path(__file__).parent.parent
+            
+        self.docs_dir = base_dir / docs_path
         self.documents: List[Dict] = []
         self._load_docs()
 
