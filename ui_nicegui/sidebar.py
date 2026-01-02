@@ -62,7 +62,7 @@ class Sidebar:
             ui.space().classes('h-2')
             
             # Chat History Section
-            with ui.column().classes('w-full flex-1'):
+            with ui.column().classes('w-full flex-1 min-h-0'):
                 with ui.row().classes('w-full justify-between items-center mb-2'):
                     ui.label('History').classes('text-sm font-semibold text-gray-300')
                     ui.button(
@@ -70,15 +70,14 @@ class Sidebar:
                         on_click=self._handle_new_chat
                     ).props('flat dense size=sm color=blue-4')
                 
-                # History List (scrollable) with custom styling
-                with ui.scroll_area().classes('flex-1').style('max-height: calc(100vh - 400px);'):
-                    with ui.column().classes('w-full gap-2') as history_col:
-                        self.history_container = history_col
-                        ui.label('No chats yet').classes('text-sm italic text-gray-500 p-2')
+                # History List (native vertical scroll, centered items via padding)
+                with ui.column().classes('w-full flex-1 overflow-y-auto overflow-x-hidden justify-start p-2 gap-2') as history_col:
+                    self.history_container = history_col
+                    ui.label('No chats yet').classes('text-sm italic text-gray-500 p-2')
+        
+            ui.separator().classes('bg-gray-700 mt-2')
             
-            ui.separator().classes('bg-gray-700 mt-auto')
-            
-            # Provider Settings Button (new!)
+            # Provider Settings Button (Anchored at bottom sibling)
             ui.button(
                 'Manage Providers',
                 icon='settings',
