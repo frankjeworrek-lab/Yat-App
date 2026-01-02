@@ -35,6 +35,10 @@ jobs:
       run: |
         pyinstaller main.py --name "YAT" --windowed --icon "logo.ico" --add-data "logo;logo" --add-data "ui_nicegui;ui_nicegui" --add-data "core;core" --add-data "plugins;plugins" --add-data "storage;storage" --add-data ".env.example;.env" --add-data "docs;docs" --collect-all nicegui --collect-all webview --clean --noconfirm
 
+    - name: Debug - List files
+      run: dir -r
+      continue-on-error: true
+
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v4
       with:
