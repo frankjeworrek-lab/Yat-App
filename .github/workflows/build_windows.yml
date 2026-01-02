@@ -31,24 +31,9 @@ jobs:
         python -c "from PIL import Image; img = Image.open('logo/dock.png'); img.save('logo.ico', sizes=[(256,256), (128,128), (64,64), (48,48), (32,32), (16,16)])"
 
     - name: Build with PyInstaller
-      # Use backtick ` for line continuation in PowerShell
-      # Note: Windows uses ; for --add-data separator
+      # Using single line to avoid PowerShell syntax ambiguity
       run: |
-        pyinstaller main.py `
-          --name "YAT" `
-          --windowed `
-          --icon "logo.ico" `
-          --add-data "logo;logo" `
-          --add-data "ui_nicegui;ui_nicegui" `
-          --add-data "core;core" `
-          --add-data "plugins;plugins" `
-          --add-data "storage;storage" `
-          --add-data ".env.example;.env" `
-          --add-data "docs;docs" `
-          --collect-all nicegui `
-          --collect-all webview `
-          --clean `
-          --noconfirm
+        pyinstaller main.py --name "YAT" --windowed --icon "logo.ico" --add-data "logo;logo" --add-data "ui_nicegui;ui_nicegui" --add-data "core;core" --add-data "plugins;plugins" --add-data "storage;storage" --add-data ".env.example;.env" --add-data "docs;docs" --collect-all nicegui --collect-all webview --clean --noconfirm
 
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v4
