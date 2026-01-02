@@ -157,14 +157,19 @@ async def initialize_providers():
                     llm_manager.active_model_id = models[0].id
                 print(f"[OK] Active Model: {llm_manager.active_model_id}")
                 
-                # Clear error if success
+                # Clear error if success AND Upgrade status to active (Verified)
                 provider_instance.config.init_error = None
+                provider_instance.config.status = "active"
             except Exception as e:
                 # If fetching models fails (e.g. invalid key), we still stay on this provider!
                 # We just can't set a model ID yet. The UI will show the error.
-                error_msg = f"Startup Model Fetch Error: {str(e)}"
+                error_msg = f"Error code: {str(e)}" # Simplified error
+                if "401" in str(e):
+                    error_msg = "Invalid API Key (401)"
+                
                 print(f"  Confirming active provider '{active_provider_id}' despite model fetch error: {e}")
                 provider_instance.config.init_error = error_msg
+                # Status remains "configured" (or "error" if we wanted to be strict, but init_error handles the UI red flag)
     
     print("[OK] Plugin-based providers initialized successfully\n")
 

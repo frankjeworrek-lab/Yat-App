@@ -181,26 +181,35 @@ class Sidebar:
             has_error = bool(active_provider.config.init_error)
             
             self.provider_status_label.text = f'Active: {provider_name}'
-            print(f"DEBUG Sidebar: Active={provider_name}, Error={active_provider.config.init_error}, Status={active_provider.config.status}")
+            api_status = active_provider.config.status
+            print(f"DEBUG Sidebar: Active={provider_name}, Error={active_provider.config.init_error}, Status={api_status}")
             
             if has_error:
                 self.provider_status_icon.name = 'error'
                 self.provider_status_icon.props('color=red')
-                self.provider_status_icon.classes('text-red-500', remove='text-green-400 text-orange-400')
-                self.provider_status_label.classes('text-red-400', remove='text-gray-300')
-            elif active_provider.config.status == 'error': # Missing Key (FIXED: access via .config)
+                self.provider_status_icon.classes('text-red-500', remove='text-green-400 text-orange-400 text-gray-400')
+                self.provider_status_label.classes('text-red-400', remove='text-gray-300 text-orange-400')
+            
+            elif api_status == 'active': # Verified Runtime Success
+                self.provider_status_icon.name = 'circle'
+                self.provider_status_icon.props(remove='color=red color=orange color=grey') 
+                self.provider_status_icon.classes('text-green-400', remove='text-red-500 text-orange-400 text-gray-500')
+                self.provider_status_label.classes('text-gray-300', remove='text-red-400 text-orange-400')
+            
+            elif api_status == 'error': # Missing Key (Manager check)
                 self.provider_status_icon.name = 'warning'
                 self.provider_status_icon.props('color=orange')
-                self.provider_status_icon.classes('text-orange-400', remove='text-green-400 text-red-500')
+                self.provider_status_icon.classes('text-orange-400', remove='text-green-400 text-red-500 text-gray-500')
                 self.provider_status_label.text = f'{provider_name} (Setup needed)'
                 self.provider_status_label.classes('text-orange-400', remove='text-gray-300')
-            else:
-                self.provider_status_icon.name = 'circle'
-                self.provider_status_icon.props(remove='color=red color=orange') 
-                self.provider_status_icon.classes('text-green-400', remove='text-red-500 text-orange-400')
+            
+            else: # 'configured' or unknown -> Grey (Ready but unverified)
+                self.provider_status_icon.name = 'radio_button_unchecked'
+                self.provider_status_icon.props('color=grey')
+                self.provider_status_icon.classes('text-gray-500', remove='text-green-400 text-red-500 text-orange-400')
                 self.provider_status_label.classes('text-gray-300', remove='text-red-400 text-orange-400')
         else:
-            # No provider selected (Truth)
+            # No provider selected
             self.provider_status_label.text = 'Active: None'
             self.provider_status_icon.name = 'help_outline'
             self.provider_status_icon.props('color=grey')

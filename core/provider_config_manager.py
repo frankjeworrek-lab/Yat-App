@@ -122,7 +122,9 @@ class ProviderConfigManager:
             if api_key_env and not has_key:
                 return "error"
         
-        return "active"
+        # Key is present (or local provider), but not validated yet.
+        # Zero Trust: We return "configured", not "active". "Active" is earned at runtime.
+        return "configured"
 
     def _get_default_providers_data(self):
         """Return the dictionary of standard default providers"""
