@@ -181,25 +181,31 @@ class Sidebar:
             has_error = bool(active_provider.config.init_error)
             
             self.provider_status_label.text = f'Active: {provider_name}'
-            print(f"DEBUG Sidebar: Active={provider_name}, Error={active_provider.config.init_error}")
+            print(f"DEBUG Sidebar: Active={provider_name}, Error={active_provider.config.init_error}, Status={active_provider.status}")
             
             if has_error:
-                self.provider_status_icon.name = 'warning'
+                self.provider_status_icon.name = 'error'
                 self.provider_status_icon.props('color=red')
-                self.provider_status_icon.classes('text-red-500', remove='text-green-400')
+                self.provider_status_icon.classes('text-red-500', remove='text-green-400 text-orange-400')
                 self.provider_status_label.classes('text-red-400', remove='text-gray-300')
+            elif active_provider.status == 'error': # Missing Key
+                self.provider_status_icon.name = 'warning'
+                self.provider_status_icon.props('color=orange')
+                self.provider_status_icon.classes('text-orange-400', remove='text-green-400 text-red-500')
+                self.provider_status_label.text = f'{provider_name} (Setup needed)'
+                self.provider_status_label.classes('text-orange-400', remove='text-gray-300')
             else:
                 self.provider_status_icon.name = 'circle'
-                self.provider_status_icon.props(remove='color=red') # FIX: Clear color prop so Tailwind class works
-                self.provider_status_icon.classes('text-green-400', remove='text-red-500')
-                self.provider_status_label.classes('text-gray-300', remove='text-red-400')
+                self.provider_status_icon.props(remove='color=red color=orange') 
+                self.provider_status_icon.classes('text-green-400', remove='text-red-500 text-orange-400')
+                self.provider_status_label.classes('text-gray-300', remove='text-red-400 text-orange-400')
         else:
             # No provider selected (Truth)
             self.provider_status_label.text = 'Active: None'
             self.provider_status_icon.name = 'help_outline'
             self.provider_status_icon.props('color=grey')
-            self.provider_status_icon.classes('text-gray-500', remove='text-green-400 text-red-500')
-            self.provider_status_label.classes('text-gray-500', remove='text-red-400')
+            self.provider_status_icon.classes('text-gray-500', remove='text-green-400 text-red-500 text-orange-400')
+            self.provider_status_label.classes('text-gray-500', remove='text-red-400 text-orange-400')
         
         # Check for provider errors (only show for ACTIVE provider)
         self.status_container.clear()
