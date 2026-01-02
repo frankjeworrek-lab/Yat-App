@@ -9,10 +9,11 @@ from core.provider_config_manager import ProviderConfigManager
 
 
 class ProviderSettingsDialog:
-    def __init__(self, llm_manager=None):
+    def __init__(self, llm_manager=None, sidebar=None):
         self.dialog = None
         self.config_manager = ProviderConfigManager()
         self.llm_manager = llm_manager
+        self.sidebar = sidebar
         self.provider_inputs = {}
         self.pending_active_provider = None  # Staged change until Save
         
@@ -236,6 +237,11 @@ class ProviderSettingsDialog:
                         print(f"✓ Re-initialized (ACTIVE): {active_pid}")
                     except Exception as e:
                         print(f"✗ Re-init failed (ACTIVE): {active_pid}: {e}")
+                    
+                    # Refresh Sidebar immediately after active provider init
+                    # This updates the "Active: ..." badge and error status
+                    if self.sidebar:
+                        self.sidebar.load_models()
                 
                 # 2. Other providers (background)
                 for pid, provider in self.llm_manager.providers.items():
