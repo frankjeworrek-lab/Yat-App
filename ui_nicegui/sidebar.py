@@ -25,7 +25,12 @@ class Sidebar:
         ):
             # Header with gradient
             # Header Banner
-            ui.image('/logo/Gemini_Generated_Image_ki82s1ki82s1ki82.png').classes('w-full rounded-xl shadow-md mb-2').tooltip('Architect: Frank Jeworrek')
+            ui.image('/logo/Gemini_Generated_Image_ki82s1ki82s1ki82.png').classes('w-full rounded-xl shadow-md mb-2').tooltip('Y.A.T. v2.1')
+            
+            # Signature
+            ui.label('ARCHITECT • FRANK JEWORREK').classes(
+                'w-full text-center text-[10px] text-gray-500 font-bold tracking-[0.2em] mb-3 opacity-80'
+            )
             
             ui.separator().classes('bg-gray-700')
             
@@ -92,6 +97,8 @@ class Sidebar:
                 ).props('outline').classes('text-gray-400 w-12').style(
                     'border-color: var(--border-color); color: var(--text-secondary);'
                 ).tooltip('Knowledge Base')
+            
+
             
  
     
