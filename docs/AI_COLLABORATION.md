@@ -376,13 +376,17 @@ When you push a version tag (e.g., `git push origin v0.3.0`), this **automatical
 - GitHub Actions will build Windows `.exe` and Mac `.app` in parallel
 - Artifacts appear in GitHub Actions → Build Artifacts after ~5-10 minutes
 
-**AI Workflow:**
+**AI Workflow (The "Playground Protocol"):**
 1. User requests: "Push and build distributions"
 2. AI creates/pushes tag (as shown above)
 3. **AI automatically runs:** `./tools/auto_download_builds.sh` (in background)
-4. Script waits for builds to complete (~8 min), then downloads to `./builds/`
-5. User receives desktop notification when builds are ready
-6. **Builds are immediately available locally** in `./builds/` directory
+4. Script waits for builds to complete (~8 min), then:
+   - Downloads artifacts to `./builds/` (Cache)
+   - **Provisions Playground:**
+     - Wipes `./playground/` (Clean Slate)
+     - Installs Mac App to `./playground/mac/YAT.app`
+     - Installs Windows build to `./playground/windows/YAT/`
+5. User receives desktop notification when playground is ready
 
 **What The AI Does Automatically:**
 ```bash
@@ -391,11 +395,24 @@ When you push a version tag (e.g., `git push origin v0.3.0`), this **automatical
 # (Runs in background, user can continue working)
 ```
 
+**AI Confirms to User (REQUIRED FORMAT):**
+```
+✅ Tag v0.3.0 pushed
+🚀 Windows + Mac builds triggered automatically
+📥 Auto-download & Playground provisioning running in background (~8 min)
+🔔 You'll get a notification when the Playground is ready
+
+📊 Watch builds live:
+👉 https://github.com/frankjeworrek-lab/Yat-App/actions
+```
+*(Always provide the GitHub Actions link!)*
+
 **User Experience:**
 - Request push → Continue working
-- Desktop notification: "Builds downloaded and ready!"
-- Builds in `./builds/windows/` and `./builds/mac/`
-- No manual download needed
+- Desktop notification: "Playground updated!"
+- **Mac:** Run `./playground/mac/YAT.app`
+- **Windows:** Run shortcut to `./playground/windows/YAT/YAT.exe`
+- No manual download, no unzipping, no searching.
 
 ### GitHub Branch Strategy (Our Approach)
 
