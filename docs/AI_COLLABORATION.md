@@ -98,6 +98,63 @@ Each testable, each revertible
 2. **"Ask first, code second"** - When in doubt, clarify
 3. **"Test before push"** - The user tests, not GitHub Actions
 4. **"Explicit over implicit"** - State assumptions, don't hide them
+5. **"Stable reference over quick fix"** - Keep a working baseline, isolate problems
+
+## The Golden Rule: Stable Reference Points
+
+**Core Insight:**
+It's better to have an **isolated, debuggable problem** than a "fix" that creates collateral damage.
+
+### Why This Matters
+
+**Scenario: Windows build fails**
+
+#### ❌ Wrong Approach (Collateral Damage)
+```
+1. Immediately "fix" 7 plugins
+2. Change main.py initialization
+3. Modify sidebar logic
+4. Push everything at once
+
+Result:
+- Mac dev version breaks
+- Windows still broken (original bug masked)
+- New bugs introduced
+- Impossible to tell what caused what
+- No clean rollback path
+```
+
+#### ✅ Right Approach (Stable Reference)
+```
+1. Mac works → Mark as stable reference (tag it!)
+2. Add ONLY debug logging (minimal change)
+3. Test on Mac (still works? ✓)
+4. Push with tag
+5. Test on Windows (get logs)
+6. NOW we know the exact difference
+
+Result:
+- Mac: Still stable (reference intact)
+- Windows: Isolated problem with diagnostic data
+- Clear path forward: Fix only what's broken
+```
+
+### The Method
+1. **Establish baseline** - Get ONE platform working perfectly
+2. **Tag it** - Create immutable reference point
+3. **Add diagnostics** - Minimal, non-invasive logging
+4. **Compare** - Use stable baseline to understand differences
+5. **Fix precisely** - Only what's broken, not everything
+
+### Why Strict Contracts Win
+Following strict, isolated tasks:
+- Preserves working code
+- Makes bugs bisectable (git bisect works!)
+- Prevents debugging chaos
+- Allows confident rollback
+- Each commit stays testable
+
+**Remember:** A working Mac + broken Windows is infinitely better than broken everything.
 
 ## Version
 Document created: 2026-01-03
