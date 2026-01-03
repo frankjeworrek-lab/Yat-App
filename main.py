@@ -252,6 +252,8 @@ def start_desktop_mode():
             show=False,  # Don't open browser - PyWebView will handle display
             port=8080,
             binding_refresh_interval=0.1,
+            # Windows Optimization: Force IPv4 loopback to avoid 1s IPv6 timeout delay
+            host='127.0.0.1' if sys.platform == 'win32' else None,
         )
     
     # Start NiceGUI server in separate thread
@@ -282,6 +284,10 @@ def start_desktop_mode():
 
 
 if __name__ in {"__main__", "__mp_main__"}:
+    # Windows Optimization: Critical for PyInstaller multiprocessing stability
+    import multiprocessing
+    multiprocessing.freeze_support()
+
     # Parse command line arguments
     parser = argparse.ArgumentParser(
         description='Y.A.T. - AI Chat Application'
