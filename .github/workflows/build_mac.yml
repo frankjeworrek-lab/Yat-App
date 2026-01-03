@@ -1,0 +1,71 @@
+name: Build Mac App
+
+on:
+  workflow_dispatch:  # Manual trigger button
+  push:
+    tags:
+      - 'v*'          # Automatically build on version tags
+
+jobs:
+  build:
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller pillow
+
+    - name: Build with PyInstaller
+      run: |
+        pyinstaller main.py \
+          --name "YAT" \
+          --windowed \
+          --icon "logo/dock.png" \
+          --add-data "logo:logo" \
+          --add-data "ui_nicegui:ui_nicegui" \
+          --add-data "core:core" \
+          --add-data "plugins:plugins" \
+          --add-data "storage:storage" \
+          --add-data ".env.example:.env" \
+          --add-data "docs:docs" \
+          --collect-all nicegui \
+          --collect-all webview \
+          --collect-all openai \
+          --collect-all google \
+          --collect-all anthropic \
+          --distpath ./dist \
+          --clean \
+          --noconfirm
+
+    - name: Debug - List files
+      run: ls -R dist || echo "Dist not found"
+
+    - name: Create DMG (Optional - macOS specific)
+      run: |
+        # Create a minimal DMG for easier distribution
+        mkdir -p dist/dmg
+        cp -r dist/YAT.app dist/dmg/
+        hdiutil create -volname "Y.A.T." -srcfolder dist/dmg -ov -format UDZO dist/YAT.dmg
+        echo "DMG created: dist/YAT.dmg"
+
+    - name: Upload App Bundle
+      uses: actions/upload-artifact@v4
+      with:
+        name: Y.A.T.-Mac-Edition-App
+        path: dist/YAT.app
+
+    - name: Upload DMG
+      uses: actions/upload-artifact@v4
+      with:
+        name: Y.A.T.-Mac-Edition-DMG
+        path: dist/YAT.dmg

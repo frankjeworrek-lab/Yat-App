@@ -267,6 +267,39 @@ git push origin feature/branch-name
 git push origin v0.3.0
 ```
 
+**⚠️ IMPORTANT: Multi-Platform Build Automation**
+
+When you push a version tag (e.g., `git push origin v0.3.0`), this **automatically triggers builds for ALL platforms**:
+- **Windows Build:** Via `.github/workflows/build_windows.yml`
+- **Mac Build:** Via `.github/workflows/build_mac.yml` (or equivalent)
+
+**What this means:**
+- **One tag push = All distributables generated**
+- No need to manually trigger builds per platform
+- GitHub Actions will build Windows `.exe` and Mac `.app` in parallel
+- Artifacts appear in GitHub Actions → Build Artifacts after ~5-10 minutes
+
+**AI Workflow:**
+1. User requests: "Push and build distributions"
+2. AI creates/pushes tag (as shown above)
+3. **AI automatically runs:** `./tools/auto_download_builds.sh` (in background)
+4. Script waits for builds to complete (~8 min), then downloads to `./builds/`
+5. User receives desktop notification when builds are ready
+6. **Builds are immediately available locally** in `./builds/` directory
+
+**What The AI Does Automatically:**
+```bash
+# After pushing tag:
+./tools/auto_download_builds.sh v0.3.0 &
+# (Runs in background, user can continue working)
+```
+
+**User Experience:**
+- Request push → Continue working
+- Desktop notification: "Builds downloaded and ready!"
+- Builds in `./builds/windows/` and `./builds/mac/`
+- No manual download needed
+
 ### GitHub Branch Strategy (Our Approach)
 
 **Philosophy:** Feature branches for experimentation, `main` for stability.

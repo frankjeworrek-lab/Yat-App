@@ -41,3 +41,6 @@ venv/
 # OS specific
 .DS_Store
 Thumbs.db
+
+# Build Artifacts (downloaded from GitHub Actions)
+builds/
