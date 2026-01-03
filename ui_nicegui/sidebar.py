@@ -180,6 +180,24 @@ class Sidebar:
         self.model_select.update()
         
         # Update Active Provider Status Badge
+        
+        # CRITICAL: Check if NO plugins loaded (system broken)
+        if len(self.llm_manager.providers) == 0:
+            from core.paths import get_data_path
+            self.provider_status_label.text = 'SYSTEM ERROR: No Plugins'
+            self.provider_status_icon.name = 'error'
+            self.provider_status_icon.props('color=yellow')
+            self.provider_status_icon.classes('text-yellow-400 animate-pulse', remove='text-green-400 text-orange-400 text-red-500 text-gray-500')
+            self.provider_status_label.classes('text-yellow-400 font-bold', remove='text-gray-300 text-orange-400 text-red-400')
+            
+            # Also add console output with log path
+            debug_log = get_data_path('plugin_debug.log')
+            print(f"\n{'='*60}")
+            print(f"CRITICAL: No provider plugins loaded!")
+            print(f"Debug log: {debug_log}")
+            print(f"{'='*60}\n")
+            return  # Skip rest of logic
+        
         active_provider = self.llm_manager.providers.get(self.llm_manager.active_provider_id)
         if active_provider:
             provider_name = active_provider.config.name
