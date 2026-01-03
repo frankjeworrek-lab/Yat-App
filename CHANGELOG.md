@@ -13,6 +13,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [v0.2.12] - 2026-01-03
+
+### Added
+- **Mac Build Automation:**
+  - GitHub Actions workflow for macOS builds (`.github/workflows/build_mac.yml`)
+  - Automated creation of `.app` bundle and `.dmg` disk image
+  - Parallel builds: Windows + Mac triggered by single tag push
+
+- **Smart Build Auto-Download:**
+  - New `tools/auto_download_builds.sh` script
+  - Automatically waits for GitHub Actions completion
+  - Downloads all platform artifacts to `./builds/` directory
+  - Desktop notification on completion (macOS)
+  - No manual artifact retrieval needed
+
+### Changed
+- **AI Collaboration Guidelines:**
+  - Added Principle #9: Build & Distribution Automation
+  - Updated release workflow documentation
+  - AI now automatically triggers build downloads after tag push
+
+### Technical
+- Extended `.gitignore` to exclude `./builds/` directory
+- Multi-platform build pipeline fully automated
+
+---
+
 ## [v0.2.11] - 2026-01-03
 
 ### Fixed
