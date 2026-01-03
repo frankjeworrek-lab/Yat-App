@@ -67,17 +67,37 @@ gh run download --name "Y.A.T.-Mac-Edition-DMG" --dir builds/mac 2>/dev/null || 
 }
 
 echo ""
-echo "✅ Build download complete!"
+echo "🎨 Provisioning Playground (Sandbox)..."
+echo "   Cleaning old playground..."
+rm -rf playground
+mkdir -p playground/mac playground/windows
+
+echo "   Installing Windows build to playground/windows/..."
+if [ -d "builds/windows/YAT" ]; then
+    cp -R builds/windows/YAT playground/windows/
+    echo "      ✅ Windows ready"
+else
+    echo "      ⚠️ Windows build missing"
+fi
+
+echo "   Installing Mac build to playground/mac/..."
+if [ -d "builds/mac/YAT.app" ]; then
+    cp -R builds/mac/YAT.app playground/mac/
+    echo "      ✅ Mac App ready"
+else
+    echo "      ⚠️ Mac App missing"
+fi
+
 echo ""
-echo "📂 Builds available at:"
-echo "   Windows: ./builds/windows/"
-echo "   Mac:     ./builds/mac/"
+echo "✅ BUILD & PROVISIONING COMPLETE!"
+echo ""
+echo "🎮 PLAYGROUND READY:"
+echo "   Mac:     ./playground/mac/YAT.app (Run directly)"
+echo "   Windows: ./playground/windows/YAT/YAT.exe (Run via Parallels)"
+echo ""
+echo "ℹ️  Tip: Create a shortcut in Windows to the .exe once."
+echo "    Updates will replace the file in-place."
 echo ""
 
 # macOS Desktop Notification (silent fail if not on macOS)
-osascript -e 'display notification "Builds downloaded and ready!" with title "Y.A.T. Build Complete"' 2>/dev/null || true
-
-# List downloaded files
-echo "📋 Downloaded files:"
-ls -lh builds/windows/ 2>/dev/null || echo "   (no Windows builds)"
-ls -lh builds/mac/ 2>/dev/null || echo "   (no Mac builds)"
+osascript -e 'display notification "Playground updated with new builds!" with title "Y.A.T. Ready"' 2>/dev/null || true

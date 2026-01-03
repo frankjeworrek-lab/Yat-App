@@ -44,3 +44,6 @@ Thumbs.db
 
 # Build Artifacts (downloaded from GitHub Actions)
 builds/
+
+# Playground (Clean Sandbox for testing builds)
+playground/
