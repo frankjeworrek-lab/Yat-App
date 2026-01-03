@@ -31,7 +31,6 @@ pyinstaller main.py \
     --add-data "core:core" \
     --add-data "plugins:plugins" \
     --add-data "storage:storage" \
-    --add-data ".env:." \
     --add-data "docs:docs" \
     --collect-all nicegui \
     --collect-all webview \
