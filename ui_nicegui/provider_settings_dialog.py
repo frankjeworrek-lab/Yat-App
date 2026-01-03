@@ -346,9 +346,9 @@ class ProviderSettingsDialog:
                 if active_pid and active_pid in self.llm_manager.providers:
                     try:
                         await self.llm_manager.providers[active_pid].initialize()
-                        print(f"✓ Re-initialized (ACTIVE): {active_pid}")
+                        print(f"[OK] Re-initialized (ACTIVE): {active_pid}")
                     except Exception as e:
-                        print(f"✗ Re-init failed (ACTIVE): {active_pid}: {e}")
+                        print(f"[ERR] Re-init failed (ACTIVE): {active_pid}: {e}")
 
                 # 2. If we just switched provider, load its models and select default
                 if self.pending_active_provider:
@@ -368,15 +368,15 @@ class ProviderSettingsDialog:
                             
                             if not current_model_is_valid:
                                 self.llm_manager.active_model_id = models[0].id
-                                print(f'✓ Activated model: {models[0].name}')
+                                print(f'[OK] Activated model: {models[0].name}')
                             else:
-                                print(f'✓ Kept active model: {self.llm_manager.active_model_id}')
+                                print(f'[OK] Kept active model: {self.llm_manager.active_model_id}')
                             
                             # Success! Set status to active immediately.
                             provider_instance.config.init_error = None
                             provider_instance.config.status = 'active'
                         except Exception as e:
-                             print(f'✗ Error loading models for new provider: {e}')
+                             print(f'[ERR] Error loading models for new provider: {e}')
                              # Propagate error to provider config so Sidebar shows it
                              err_msg = f"Model Fetch Error: {str(e)}"
                              provider_instance.config.init_error = err_msg
