@@ -38,6 +38,15 @@ load_dotenv(get_data_path('.env'), override=True)
 from core.paths import ensure_data_dir
 ensure_data_dir()
 
+# DEBUG: Write version marker to prove this code is running
+from core.paths import get_data_path
+import datetime
+try:
+    with open(get_data_path('init_marker.txt'), 'w') as f:
+        f.write(f"Version: v0.2.1-marker\nTimestamp: {datetime.datetime.now()}\nPlatform: {sys.platform}\n")
+except Exception as e:
+    print(f"Failed to write marker: {e}")
+
 # Global LLM Manager (initialized on startup)
 llm_manager = None
 
