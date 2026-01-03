@@ -135,10 +135,11 @@ class Sidebar:
 
     async def _handle_status_click(self):
         """
-        Smart Status Click Handler:
-        - If active: Do nothing (or open connection info)
-        - If error/warning: Try to REPAIR connection (Soft Retry)
-        - If no provider: Open settings
+        Active User Assistance Handler (The "Trust through Verification" Flow)
+        
+        Concept:
+        - GREEN: "Is it really working?" -> Click -> Verify -> "Yes, verified!" (Trust)
+        - YELLOW/RED: "It's broken/slow" -> Click -> Repair -> "Trying again..." -> Result (Assistance)
         """
         if not self.llm_manager.active_provider_id:
             self._open_settings()
@@ -148,36 +149,42 @@ class Sidebar:
         if not provider:
             return
 
-        # Don't interrupt working connection
-        if provider.config.status == 'active' and not provider.config.init_error:
-            ui.notify("Connection is healthy", type='info')
-            # Fix Phantom-Yellow: Force UI refresh just in case
-            await self.load_models()
-            return
-            
-        # REPAIR SEQUENCE
-        # 1. Visual Feedback
-        self.set_optimistic_state(provider.config.name)
+        # 1. IMMEDIATE VISUAL FEEDBACK (Handshake)
+        # "I heard you, I am checking."
+        original_icon = self.provider_status_icon.name
+        original_color = self.provider_status_icon.props.get('color')
         
-        # 2. Logic Reset (Allow retry)
-        provider.config.init_error = None
+        self.provider_status_icon.name = 'sync'
+        self.provider_status_icon.props('color=blue')
+        self.provider_status_icon.classes('animate-spin text-blue-400', remove='text-green-400 text-red-500 text-orange-400 text-yellow-400')
+        self.provider_status_label.text = f'Verifying {provider.config.name}...'
+        self.provider_status_label.classes('text-blue-400', remove='text-gray-300 text-red-400 text-orange-400')
         
-        # 3. Execution
+        # Give UI a moment to breathe (Essential for "Organic" feel)
+        import asyncio
+        await asyncio.sleep(0.5) 
+        
+        # 2. THE CHECK (Verification)
         try:
-             # Wait a tiny bit to let the UI render the spinner
-             import asyncio
-             await asyncio.sleep(0.1)
-             
-             # Force Re-Init and Load
+             # Force Re-Init (this is the actual check)
              await provider.initialize()
              await self.load_models()
              
-             if provider.config.status == 'active':
-                 ui.notify(f"Successfully reconnected to {provider.config.name}", type='positive')
-             
+             # 3. RESULT FEEDBACK (Assistance)
+             if provider.config.status == 'active' and not provider.config.init_error:
+                 # Success Case: Trust Builder
+                 ui.notify(f"✓ Verified: {provider.config.name} is fully operational.", type='positive')
+             else:
+                 # Failure Case: Assistance
+                 # Instead of just red, offer next steps? For now, the Red UI state is enough, 
+                 # as clicking it again triggers this loop.
+                 error_msg = provider.config.init_error or "Unknown Error"
+                 ui.notify(f"⚠ verification failed: {error_msg}", type='warning')
+                 
         except Exception as e:
-            # Error handling is done by load_models, but notify here too
-             ui.notify(f"Retry failed: {str(e)}", type='negative')
+             ui.notify(f"System Error during verification: {str(e)}", type='negative')
+             # Reset UI state happens in load_models() usually, but if that crashed:
+             await self.load_models()
     
     def _handle_new_chat(self):
         """Handle new chat button"""
@@ -261,7 +268,7 @@ class Sidebar:
             if has_error:
                 self.provider_status_icon.name = 'error'
                 self.provider_status_icon.props('color=red')
-                self.provider_status_icon.classes('text-red-500', remove='text-green-400 text-orange-400 text-gray-400')
+                self.provider_status_icon.classes('text-red-500 animate-pulse', remove='text-green-400 text-orange-400 text-gray-400')
                 self.provider_status_label.text = 'Failed: Click to Retry'
                 self.provider_status_label.classes('text-red-400', remove='text-gray-300 text-orange-400')
             
@@ -274,14 +281,14 @@ class Sidebar:
             elif api_status == 'error': # Missing Key (Manager check)
                 self.provider_status_icon.name = 'warning'
                 self.provider_status_icon.props('color=orange')
-                self.provider_status_icon.classes('text-orange-400', remove='text-green-400 text-red-500 text-gray-500')
+                self.provider_status_icon.classes('text-orange-400 animate-pulse', remove='text-green-400 text-red-500 text-gray-500')
                 self.provider_status_label.text = f'{provider_name} (Setup needed)'
                 self.provider_status_label.classes('text-orange-400', remove='text-gray-300')
             
             else: # 'configured' or unknown -> RED (Strict policy: If not active -> Error)
                 self.provider_status_icon.name = 'error_outline'
                 self.provider_status_icon.props('color=red')
-                self.provider_status_icon.classes('text-red-400', remove='text-green-400 text-orange-400 text-gray-500')
+                self.provider_status_icon.classes('text-red-400 animate-pulse', remove='text-green-400 text-orange-400 text-gray-500')
                 self.provider_status_label.text = 'Connection Lost (Retry)'
                 self.provider_status_label.classes('text-red-400', remove='text-gray-300 text-orange-400')
         else:
@@ -289,7 +296,7 @@ class Sidebar:
             self.provider_status_label.text = 'No Active Provider'
             self.provider_status_icon.name = 'warning'
             self.provider_status_icon.props('color=orange')
-            self.provider_status_icon.classes('text-orange-400', remove='text-green-400 text-red-500 text-gray-500')
+            self.provider_status_icon.classes('text-orange-400 animate-pulse', remove='text-green-400 text-red-500 text-gray-500')
             self.provider_status_label.classes('text-orange-400', remove='text-gray-300 text-red-400')
         
         # Check for provider errors (only show for ACTIVE provider)

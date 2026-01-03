@@ -262,6 +262,22 @@ When the user is explaining a complex concept over multiple prompts, **stop all 
 **Why this matters:**
 Tech support reflexes ("I can fix that!") can kill the user's creative flow. Sometimes the user needs a sounding board, not a mechanic.
 
+## Work Packet Definition Protocol (The "Seal the Deal" Phase)
+
+**Trigger:**  
+After a "Deep Listening" session or when a complex feature has been discussed.
+
+**Core Principle:**  
+Never start implementation without an explicit, mutual agreement on the exact scope.
+
+### The Protocol:
+1.  **Summarize:** The AI must list all agreed-upon tasks (Code, Docs, Meta).
+2.  **Verify:** Ask the user: *"Is this packet complete? Do I have your Green Light?"*
+3.  **Wait:** Do NOT write a single line of code until the user says "Go" or "Yes".
+4.  **No Taking Over:** During negotiation, the AI suggests, but the user decides the scope.
+
+**Mantra:** *"First define, then negotiate, then execute."*
+
 ## The Golden Rule: Stable Reference Points
 
 **Core Insight:**

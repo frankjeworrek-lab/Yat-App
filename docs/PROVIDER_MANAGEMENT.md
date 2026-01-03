@@ -142,6 +142,18 @@ Restart App → Changes applied
 
 ## ✨ Features
 
+## Troubleshooting
+
+### Connection Issues (Yellow/Red State)
+The system uses an **Active Assistance** model. If you see a yellow or red status badge:
+1.  **Click the Badge:** This triggers a "Smart Verification".
+2.  **Wait:** The system will attempt to reconnect and verify the provider.
+3.  **Result:** If successful, it turns green. If not, it provides error details.
+
+*(See [UX Philosophy](UX_PHILOSOPHY.md) for details)*
+
+### Invalid API Key
+
 ### **Aktuell (Phase 1 + 2):**
 - ✅ Provider-Liste anzeigen
 - ✅ Enable/Disable Toggle

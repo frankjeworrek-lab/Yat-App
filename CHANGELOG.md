@@ -13,6 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [v0.2.13] - 2026-01-03
+### Added
+- **Active User Assistance:** Interactive status badges with "Trust through Verification" workflow.
+  - Clicking a Green badge verifies the connection (Peace of Mind).
+  - Clicking a Yellow/Red badge triggers a smart repair/retry loop.
+  - Visual Pulse animation for "Action Required" states (Yellow/Red).
+- **UX Philosophy:** New documentation (`docs/UX_PHILOSOPHY.md`) defining the "Active Assistance" concept.
+- **Guidelines:** Added "Work Packet Definition Protocol" to AI Collaboration Guidelines.
+
 ## [v0.2.12] - 2026-01-03
 
 ### Added
