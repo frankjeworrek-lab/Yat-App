@@ -151,6 +151,8 @@ class Sidebar:
         # Don't interrupt working connection
         if provider.config.status == 'active' and not provider.config.init_error:
             ui.notify("Connection is healthy", type='info')
+            # Fix Phantom-Yellow: Force UI refresh just in case
+            await self.load_models()
             return
             
         # REPAIR SEQUENCE
@@ -260,6 +262,7 @@ class Sidebar:
                 self.provider_status_icon.name = 'error'
                 self.provider_status_icon.props('color=red')
                 self.provider_status_icon.classes('text-red-500', remove='text-green-400 text-orange-400 text-gray-400')
+                self.provider_status_label.text = 'Failed: Click to Retry'
                 self.provider_status_label.classes('text-red-400', remove='text-gray-300 text-orange-400')
             
             elif api_status == 'active': # Verified Runtime Success
@@ -279,7 +282,7 @@ class Sidebar:
                 self.provider_status_icon.name = 'error_outline'
                 self.provider_status_icon.props('color=red')
                 self.provider_status_icon.classes('text-red-400', remove='text-green-400 text-orange-400 text-gray-500')
-                self.provider_status_label.text = 'No Active Provider'
+                self.provider_status_label.text = 'Connection Lost (Retry)'
                 self.provider_status_label.classes('text-red-400', remove='text-gray-300 text-orange-400')
         else:
             # No provider selected -> Warn the user!
