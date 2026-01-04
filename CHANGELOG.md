@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned
-- Tooltip for status badge ("Click to retry connection")
-- Pulse animation for warning states
+## [v0.2.14] - 2026-01-04
+### Added
+- **Active Assistance UI (Status Matrix v2):** Comprehensive status indicator system with "Problem ➜ Solution" logic.
+- **Contextual Status:** Provider-specific error messages (e.g., "[Mistral]: Auth Failed").
+- **Verification Flow:** Clickable status badge triggers self-check and verification.
+- **Guidelines Update:** New protocols for Work Packages and State Safety.
 
 ---
 

@@ -244,6 +244,46 @@ Each testable, each revertible
 4. **"Explicit over implicit"** - State assumptions, don't hide them
 5. **"Stable reference over quick fix"** - Keep a working baseline, isolate problems
 
+## Work Package Only Protocol (The "No Spec, No Code" Rule)
+
+**Trigger:**  
+Any request that involves more than a trivial one-line fix.
+
+**Core Principle:**  
+All work must be based on a documented **Work Package** (`.md` file). The AI is **forbidden** from writing code based on chat instructions alone for complex tasks.
+
+### The Protocol:
+1.  **Draft:** Create/Update `docs/specs/[topic]/wp[XX]_[purpose].md`.
+2.  **Define:**
+    *   **Objective:** What are we doing?
+    *   **Scope:** Specific code changes (files, functions).
+    *   **Reference:** Link to the Truth (Spec/Concept).
+    *   **Verify:** What defines "Done"?
+3.  **The Molding Phase (Iterate):**
+    *   Until execution starts, the Work Package is **malleable**.
+    *   We can refine, rewrite, and "knead" the plan endlessly until it matches the user's vision.
+    *   **No Code** is written during this phase.
+    *   **STRICT BAN:** Even if the user gives implementation hints like "Use function X", the AI must record it in the WP, but **NOT** execute it yet.
+4.  **Approve:** Ask user: *"Work Package is documented. Shall I execute?"*
+4.  **Execute:** Only after "Go", implement exactly what is in the WP.
+
+### 5. Post-Execution & State Safety (The Consistency Rule)
+*   **Status Report:** After completing a WP, you must explicitly inform the user of the **local state**:
+    *   *"Local files updated. Application is runnable. Changes are NOT yet committed."*
+*   **Non-Destructive Stacking:**
+    *   We can *define* multiple Work Packages (docs) in parallel.
+    *   However, executing a new WP must **never** break or invalidate the uncommitted work of a previous WP.
+    *   **MANDATORY WARNING:** The AI **must detect and warn** if starting a new WP would make the local state inconsistent or overwrite uncommitted progress from another parallel WP.
+    *   **Guard Rail:** If such a risk exists, **STOP** and ask the user to commit, stash, or reset first.
+
+### 6. Finalization & Sealing (The "Done" Definition)
+*   **Implemented != Complete.**
+*   A WP is only **"Implemented"** when code is written locally (Dirty State).
+*   A WP is strictly **"Complete"** only after the user has successfully tested it and authorized a **Commit/Push** (Clean State).
+*   **Rule:** Never treat a WP as history until it is in the git history.
+
+**Why:** Prevents "drift", ensures we agree on the plan *before* damaging code, and leaves a paper trail.
+
 ## Deep Listening Mode (The "Flow Preservation" Protocol)
 
 **Trigger Phrase:**  
@@ -277,6 +317,22 @@ Never start implementation without an explicit, mutual agreement on the exact sc
 4.  **No Taking Over:** During negotiation, the AI suggests, but the user decides the scope.
 
 **Mantra:** *"First define, then negotiate, then execute."*
+
+## The Friendly Guide Protocol (Context Management)
+
+**Trigger:**  
+When the user jumps between topics, or a long-running background task (like a build) is started.
+
+**Core Principle:**  
+The AI acts as the "External Memory" and "Structure Keeper" for the user. Ideally, allow the user to be erratic and creative; the AI keeps the map.
+
+### Rules for the AI:
+1.  **Park & Acknowledge:** If the user switches context ("Let's do X while getting Y"), acknowledge the switch and explicitly state: *"Parking topic Y. Switching to X."*
+2.  **Monitor Background:** Keep an eye on the "parked" task (e.g., waiting for builds).
+3.  **Proactive Recall:** When the trigger event occurs (e.g., builds ready), gently remind the user: *"By the way, the builds are ready. Shall we switch back to testing?"*
+4.  **No Nagging:** Offer the return ticket, but respect if the user wants to stay on the new topic.
+
+**Golden Rule:** *Be the friendly navigator in the creative chaos.*
 
 ## The Golden Rule: Stable Reference Points
 

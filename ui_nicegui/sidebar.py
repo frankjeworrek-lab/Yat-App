@@ -6,6 +6,7 @@ from nicegui import ui
 from core.llm_manager import LLMManager
 from core.user_config import UserConfig
 from .components.connection_status import ConnectionMonitor
+import asyncio
 
 
 class Sidebar:
@@ -18,6 +19,11 @@ class Sidebar:
         self.model_select = None
         self.history_container = None
         self.status_container = None
+        
+        # UI References for Active Assistance
+        self.status_badge_row = None
+        self.provider_status_icon = None
+        self.provider_status_label = None
         
     def build(self):
         """Build the sidebar UI with professional dark theme"""
@@ -43,14 +49,17 @@ class Sidebar:
                         'flat dense size=sm'
                     ).classes('text-gray-400 hover:text-blue-400')
                 
-                # Active Provider Status Badge
-                # Interactive: Click to retry connection or open settings
-                with ui.row().classes('w-full items-center gap-2 mb-2 px-3 py-2 cursor-pointer hover:bg-opacity-50 transition-colors').style(
-                    'background-color: var(--bg-accent); border-radius: 6px; border: 1px solid var(--border-color);'
-                ).on('click', self._handle_status_click):
-                    self.provider_status_icon = ui.icon('circle', size='xs').classes('text-green-400')
-                    self.provider_status_label = ui.label('Active: Loading...').classes('text-xs text-gray-300')
-                
+                # Active Provider Status Badge (Active Assistance)
+                # Styled as a pill/bubble with dynamic background and text color
+                with ui.row().classes('w-full items-center gap-2 mb-2 px-3 py-2 cursor-pointer transition-colors rounded-lg border').style(
+                    'border-color: var(--border-color);'
+                ).on('click', self._handle_status_click) as row:
+                    self.status_badge_row = row
+                    self.provider_status_icon = ui.icon('circle', size='xs')
+                    self.provider_status_label = ui.label('Initializing...').classes('text-xs font-medium flex-1')
+                    # Assistance Arrow (Always present but styled differently)
+                    self.status_action_icon = ui.label('').classes('text-xs font-bold')
+
                 # Model Dropdown with custom styling
                 self.model_select = ui.select(
                     options={},
@@ -60,7 +69,7 @@ class Sidebar:
                     'background-color: var(--bg-accent); border-color: var(--border-color);'
                 )
             
-            # Status Container (for errors)
+            # Status Container (for detailed error cards if needed)
             with ui.column().classes('w-full') as status_col:
                 self.status_container = status_col
                 self.status_container.visible = False
@@ -102,22 +111,10 @@ class Sidebar:
             
             # Global Connection Monitor (Footer)
             ConnectionMonitor().build()
-            
-
-            
- 
     
     def _open_settings(self, tab='providers'):
         """Open settings dialog with specific tab"""
         from .provider_settings_dialog import ProviderSettingsDialog
-        # Pass self (Sidebar) as callback/parent logic provider if needed, or remove param if not used
-        # Note: Previous code had 'sidebar=self', checking if dialog accepts it.
-        # Assuming dialog accepts (llm_manager, on_theme_change_callback) or similar.
-        # Let's inspect dialog constructor.
-        # Step 446 says: __init__(self, llm_manager, on_theme_change=None):
-        # But previous code used: dialog = ProviderSettingsDialog(llm_manager=self.llm_manager, sidebar=self) (IN FILE VIEW above)
-        # Wait, file view line 91 says: ProviderSettingsDialog(llm_manager=self.llm_manager, sidebar=self)
-        # So I must keep that call signature!
         dialog = ProviderSettingsDialog(llm_manager=self.llm_manager, sidebar=self)
         dialog.show(initial_tab=tab)
 
@@ -126,20 +123,79 @@ class Sidebar:
         from .docs_dialog import DocsDialog
         DocsDialog().show()
     
-
-
-    
     async def _refresh_models(self):
         """Refresh models from all providers"""
         await self.load_models()
 
+    def _update_status_badge(self, state_group, text, icon_name, animate=False, action_hint=""):
+        """
+        Centralized UI Update Logic for Status Matrix v2
+        Enforces Generic Design Rules (Monochromatic Styling)
+        
+        state_group: 'green', 'blue', 'orange', 'red', 'critical'
+        """
+        # 1. Reset Classes
+        base_classes = 'w-full items-center gap-2 mb-2 px-3 py-2 cursor-pointer transition-colors rounded-lg border'
+        icon_classes = ''
+        text_classes = 'text-xs font-medium flex-1'
+        
+        # 2. Apply Design Rules (Spec v2)
+        if state_group == 'green':
+            bg_class = 'bg-green-900 bg-opacity-30 border-green-800'
+            fg_class = 'text-green-400'
+            hover_class = 'hover:bg-opacity-40'
+        elif state_group == 'blue':
+            bg_class = 'bg-blue-900 bg-opacity-40 border-blue-800'
+            fg_class = 'text-blue-400'
+            hover_class = 'hover:bg-opacity-50'
+        elif state_group == 'orange':
+            bg_class = 'bg-orange-900 bg-opacity-40 border-orange-800'
+            fg_class = 'text-orange-400'
+            hover_class = 'hover:bg-opacity-50 hover:border-orange-600'
+        elif state_group == 'red':
+            bg_class = 'bg-red-900 bg-opacity-40 border-red-800'
+            fg_class = 'text-red-400'
+            hover_class = 'hover:bg-opacity-50 hover:border-red-600'
+        elif state_group == 'critical':
+            bg_class = 'bg-red-950 border-red-900'
+            fg_class = 'text-red-600 font-bold'
+            hover_class = 'hover:bg-black'
+        else: # Fallback
+            bg_class = 'bg-gray-800'
+            fg_class = 'text-gray-400'
+            hover_class = ''
+
+        # 3. Apply to UI Elements
+        self.status_badge_row.classes(replace=f"{base_classes} {bg_class} {hover_class}")
+        
+        # Icon
+        self.provider_status_icon.name = icon_name
+        self.provider_status_icon.props(f'color={state_group if state_group != "critical" else "red"}') # NiceGUI color prop
+        # Reset animation classes first
+        current_anim = 'animate-spin' if 'spin' in (self.provider_status_icon.classes or '') else ''
+        current_anim = 'animate-pulse' if 'pulse' in (self.provider_status_icon.classes or '') else current_anim
+        self.provider_status_icon.classes(replace=f"{fg_class} {current_anim}")
+        
+        if animate == 'spin':
+             self.provider_status_icon.classes(add='animate-spin', remove='animate-pulse')
+        elif animate == 'pulse':
+             self.provider_status_icon.classes(add='animate-pulse', remove='animate-spin')
+        else:
+             self.provider_status_icon.classes(remove='animate-spin animate-pulse')
+
+        # Text
+        self.provider_status_label.text = text
+        self.provider_status_label.classes(replace=f"{text_classes} {fg_class}")
+        
+        # Action Hint (Arrow)
+        self.status_action_icon.text = action_hint
+        self.status_action_icon.classes(replace=f"text-xs font-bold {fg_class}")
+
+
     async def _handle_status_click(self):
         """
-        Active User Assistance Handler (The "Trust through Verification" Flow)
-        
-        Concept:
-        - GREEN: "Is it really working?" -> Click -> Verify -> "Yes, verified!" (Trust)
-        - YELLOW/RED: "It's broken/slow" -> Click -> Repair -> "Trying again..." -> Result (Assistance)
+        Active User Assistance Handler (Spec v2)
+        Handles transitions based on current state.
         """
         if not self.llm_manager.active_provider_id:
             self._open_settings()
@@ -149,212 +205,143 @@ class Sidebar:
         if not provider:
             return
 
-        # 1. IMMEDIATE VISUAL FEEDBACK (Handshake)
-        # "I heard you, I am checking."
-        original_icon = self.provider_status_icon.name
-        original_color = self.provider_status_icon.props.get('color')
+        # [B2] Verifying Status... (Immediate Feedback)
+        self._update_status_badge('blue', 'Verifying Status...', 'search', animate='spin')
+        self.status_action_icon.text = "" # Clear action during wait
         
-        self.provider_status_icon.name = 'sync'
-        self.provider_status_icon.props('color=blue')
-        self.provider_status_icon.classes('animate-spin text-blue-400', remove='text-green-400 text-red-500 text-orange-400 text-yellow-400')
-        self.provider_status_label.text = f'Verifying {provider.config.name}...'
-        self.provider_status_label.classes('text-blue-400', remove='text-gray-300 text-red-400 text-orange-400')
-        
-        # Give UI a moment to breathe (Essential for "Organic" feel)
-        import asyncio
+        # Give UI a moment to breathe
         await asyncio.sleep(0.5) 
         
-        # 2. THE CHECK (Verification)
         try:
-             # Force Re-Init (this is the actual check)
+             # Force Re-Init (The Check)
              await provider.initialize()
              await self.load_models()
              
-             # 3. RESULT FEEDBACK (Assistance)
+             # The result determines the next state (handled by load_models)
+             # But if successful, show transient success [G2]
              if provider.config.status == 'active' and not provider.config.init_error:
-                 # Success Case: Trust Builder
-                 ui.notify(f"✓ Verified: {provider.config.name} is fully operational.", type='positive')
+                 self._update_status_badge('green', '✓ Verified: Operational', 'check_circle', animate=False)
+                 await asyncio.sleep(2.0)
+                 # Revert to standard G1/G3 display
+                 await self.load_models()
              else:
-                 # Failure Case: Assistance
-                 # Instead of just red, offer next steps? For now, the Red UI state is enough, 
-                 # as clicking it again triggers this loop.
-                 error_msg = provider.config.init_error or "Unknown Error"
-                 ui.notify(f"⚠ verification failed: {error_msg}", type='warning')
-                 
+                 # Failure is handled by load_models picking up the error state
+                 pass
+                  
         except Exception as e:
-             ui.notify(f"System Error during verification: {str(e)}", type='negative')
-             # Reset UI state happens in load_models() usually, but if that crashed:
-             await self.load_models()
+             # Fallback for crashing checks
+             self._update_status_badge('red', f'{provider.config.name}: System Crash ➜ Log', 'bug_report', action_hint='➜')
+             print(f"Verification Crash: {e}")
+
     
     def _handle_new_chat(self):
-        """Handle new chat button"""
         if self.on_new_chat:
             self.on_new_chat()
     
     def _handle_load_chat(self, conversation_id):
-        """Handle chat load from history"""
         if self.on_load_chat:
             self.on_load_chat(conversation_id)
     
     def _handle_model_change(self, e):
-        """Handle model selection change"""
         value = self.model_select.value
-        if not value:
-            return
-        
+        if not value: return
         try:
             pid, mid = value.split('|', 1)
             self.llm_manager.active_provider_id = pid
             self.llm_manager.active_model_id = mid
-            
-            # Persist selection
             UserConfig.save('last_model', value)
-            
             if self.on_model_change:
                 self.on_model_change(f'Switched to {mid}')
-        except (ValueError, AttributeError) as err:
-            print(f"Model change error: {err}")
+        except Exception:
+            pass
     
     async def load_models(self):
-        """Load and populate model dropdown"""
-        # This prevents the dropdown from implicitly switching providers 
-        # just because the active one has no models (error state).
+        """
+        Load models and Map to Status Matrix v2 [G1-R6]
+        """
+        # This implicitly calls provider checks if needed
         models = await self.llm_manager.get_available_models()
         
-        # Mirror Logic from main.py: If we got models, the provider is ACTIVE.
-        active_p = self.llm_manager.providers.get(self.llm_manager.active_provider_id)
-        if active_p and models:
-            active_p.config.status = 'active'
-            active_p.config.init_error = None
+        # Identify Active Provider
+        active_id = self.llm_manager.active_provider_id
+        active_provider = self.llm_manager.providers.get(active_id) if active_id else None
         
+        # --- LOGIC MAPPING (The Brain of Assistance) ---
+        
+        if len(self.llm_manager.providers) == 0:
+            # [R6] CRITICAL FAILURE
+            self._update_status_badge('critical', 'Critical Failure ➜ Help', 'dangerous', animate='pulse', action_hint='➜')
+            
+        elif not active_provider:
+            # [O4] No Provider
+            self._update_status_badge('orange', 'No Provider ➜ Select One', 'touch_app', animate='pulse', action_hint='➜')
+            
+        else:
+            p_name = active_provider.config.name
+            init_error = active_provider.config.init_error
+            status = active_provider.config.status
+            
+            if init_error:
+                # Differentiate Errors based on message content (heuristic)
+                err_text = str(init_error).lower()
+                
+                if '401' in err_text or 'key' in err_text or 'auth' in err_text:
+                    # [R1] Auth Failed
+                    self._update_status_badge('red', f'{p_name}: Auth Failed ➜ Edit Key', 'lock', animate='pulse', action_hint='🛠️')
+                elif '429' in err_text or 'quota' in err_text:
+                    # [R5] Quota Exceeded
+                    self._update_status_badge('red', f'{p_name}: Quota Exceeded ➜ Plan', 'payments', animate=False, action_hint='➜')
+                elif 'connect' in err_text or 'timeout' in err_text:
+                    # [R2] Connection Lost
+                    self._update_status_badge('red', f'{p_name}: Connection Lost ➜ Retry', 'wifi_off', animate='pulse', action_hint='↻')
+                else:
+                    # [R3/R4] Generic Error
+                    self._update_status_badge('red', f'{p_name}: Error ➜ Retry', 'bug_report', animate='pulse', action_hint='↻')
+
+            elif status == 'setup_needed':
+                # [O1] Setup Needed
+                 self._update_status_badge('orange', f'{p_name}: Setup Needed ➜ Configure', 'settings', animate='pulse', action_hint='⚙️')
+            
+            elif status == 'active':
+                if not models:
+                    # [O3] Empty Models (Active but empty)
+                    self._update_status_badge('orange', f'{p_name}: No Models ➜ Refresh', 'folder_off', animate=False, action_hint='↻')
+                else:
+                    # [G1] Active Healthy (Standard)
+                    # Future: Implement G3 check here if we have cache-flag
+                    self._update_status_badge('green', f'Active: {p_name}', 'circle', animate=False)
+
+            else:
+                # Catch-all (Should not happen often)
+                self._update_status_badge('red', f'{p_name}: Unknown State ➜ Check', 'help', action_hint='?')
+
+        
+        # Populate Dropdown
         options = {}
-        for m in models:
-            pid = getattr(m, 'provider_id', 'mock')
-            key = f"{pid}|{m.id}"
-            text = f"{m.name} ({m.provider})"
-            options[key] = text
+        if models:
+            for m in models:
+                pid = getattr(m, 'provider_id', 'mock')
+                key = f"{pid}|{m.id}"
+                options[key] = f"{m.name} ({m.provider})"
         
         self.model_select.options = options
         self.model_select.update()
         
-        
-        # Update Active Provider Status Badge
-        
-        # CRITICAL: Check if NO plugins loaded (system broken)
-        if len(self.llm_manager.providers) == 0:
-            from core.paths import get_data_path
-            self.provider_status_label.text = 'SYSTEM ERROR: No Plugins'
-            self.provider_status_icon.name = 'error'
-            self.provider_status_icon.props('color=yellow')
-            self.provider_status_icon.classes('text-yellow-400 animate-pulse', remove='text-green-400 text-orange-400 text-red-500 text-gray-500')
-            self.provider_status_label.classes('text-yellow-400 font-bold', remove='text-gray-300 text-orange-400 text-red-400')
-            
-            debug_log = get_data_path('plugin_debug.log')
-            print(f"\n{'='*60}")
-            print(f"CRITICAL: No provider plugins loaded!")
-            print(f"Debug log: {debug_log}")
-            print(f"{'='*60}\n")
-            return
-        
-        active_provider = self.llm_manager.providers.get(self.llm_manager.active_provider_id)
-        if active_provider:
-            provider_name = active_provider.config.name
-            has_error = bool(active_provider.config.init_error)
-            
-            self.provider_status_label.text = f'Active: {provider_name}'
-            api_status = active_provider.config.status
-            print(f">>> DEBUG Sidebar REFRESH: Provider='{provider_name}', Status='{api_status}', InitError='{active_provider.config.init_error}'")
-            
-            if has_error:
-                self.provider_status_icon.name = 'error'
-                self.provider_status_icon.props('color=red')
-                self.provider_status_icon.classes('text-red-500 animate-pulse', remove='text-green-400 text-orange-400 text-gray-400')
-                self.provider_status_label.text = 'Failed: Click to Retry'
-                self.provider_status_label.classes('text-red-400', remove='text-gray-300 text-orange-400')
-            
-            elif api_status == 'active': # Verified Runtime Success
-                self.provider_status_icon.name = 'circle'
-                self.provider_status_icon.props(remove='color=red color=orange color=grey') 
-                self.provider_status_icon.classes('text-green-400', remove='text-red-500 text-orange-400 text-gray-500')
-                self.provider_status_label.classes('text-gray-300', remove='text-red-400 text-orange-400')
-            
-            elif api_status == 'error': # Missing Key (Manager check)
-                self.provider_status_icon.name = 'warning'
-                self.provider_status_icon.props('color=orange')
-                self.provider_status_icon.classes('text-orange-400 animate-pulse', remove='text-green-400 text-red-500 text-gray-500')
-                self.provider_status_label.text = f'{provider_name} (Setup needed)'
-                self.provider_status_label.classes('text-orange-400', remove='text-gray-300')
-            
-            else: # 'configured' or unknown -> RED (Strict policy: If not active -> Error)
-                self.provider_status_icon.name = 'error_outline'
-                self.provider_status_icon.props('color=red')
-                self.provider_status_icon.classes('text-red-400 animate-pulse', remove='text-green-400 text-orange-400 text-gray-500')
-                self.provider_status_label.text = 'Connection Lost (Retry)'
-                self.provider_status_label.classes('text-red-400', remove='text-gray-300 text-orange-400')
-        else:
-            # No provider selected -> Warn the user!
-            self.provider_status_label.text = 'No Active Provider'
-            self.provider_status_icon.name = 'warning'
-            self.provider_status_icon.props('color=orange')
-            self.provider_status_icon.classes('text-orange-400 animate-pulse', remove='text-green-400 text-red-500 text-gray-500')
-            self.provider_status_label.classes('text-orange-400', remove='text-gray-300 text-red-400')
-        
-        # Check for provider errors (only show for ACTIVE provider)
-        self.status_container.clear()
-        has_errors = False
-        
-        active_provider = self.llm_manager.providers.get(self.llm_manager.active_provider_id)
-        if active_provider and active_provider.config.init_error:
-            print(f"DEBUG: Showing error for {active_provider.config.name}: {active_provider.config.init_error}")
-            has_errors = True
-    
-            with self.status_container:
-                with ui.card().classes('w-full p-2 bg-red-900 bg-opacity-20 border border-red-700'):
-                     with ui.row().classes('items-center gap-2'):
-                         ui.icon('warning', color='amber', size='sm')
-                         ui.label(f"{active_provider.config.name}: {active_provider.config.init_error}").classes(
-                             'text-xs text-red-300'
-                         )
+        # Restore Selection Logic
+        display_val = None
+        saved = UserConfig.get('last_model')
+        if saved and saved in options: display_val = saved
+        elif active_id and f"{active_id}|{self.llm_manager.active_model_id}" in options:
+             display_val = f"{active_id}|{self.llm_manager.active_model_id}"
+        elif options:
+             display_val = list(options.keys())[0]
 
-        
-        self.status_container.visible = has_errors
-        
-        # Smart default selection
-        # Respect the managers active provider (which was set by main.py from config)
-        saved_model = UserConfig.get('last_model')
-        current_manager_provider = self.llm_manager.active_provider_id
-        
-        target_value = None
-        
-        # 1. Try saved model ONLY if it matches active provider
-        if saved_model and saved_model in options and saved_model.startswith(current_manager_provider + '|'):
-             target_value = saved_model
-        
-        # 2. Else use current selection from Manager (which main.py set up)
-        elif f"{current_manager_provider}|{self.llm_manager.active_model_id}" in options:
-             target_value = f"{current_manager_provider}|{self.llm_manager.active_model_id}"
-             
-        # 3. Fallback: First model of active provider
-        if not target_value:
-             provider_options = [k for k in options.keys() if k.startswith(current_manager_provider + '|')]
-             if provider_options:
-                 target_value = provider_options[0]
-        
-        # 4. Ultimate Fallback
-        if not target_value and options:
-            target_value = list(options.keys())[0]
+        if display_val:
+            self.model_select.value = display_val
 
-        if target_value:
-            self.model_select.value = target_value
-            # Do NOT trigger on_change if we are just restoring state to avoid loops
-            # self._handle_model_change(None) 
-            # We just set the UI to match the internal state
-            pass
-    
     def update_history_list(self, conversations):
         """Update chat history list with modern card design"""
         self.history_container.clear()
-        
         if not conversations:
             with self.history_container:
                 ui.label('No chats yet').classes('text-sm italic text-gray-500 p-2')
@@ -366,30 +353,14 @@ class Sidebar:
                         'background-color: var(--bg-secondary); border: 1px solid var(--border-color);'
                         'transition: all 0.2s ease;'
                     ).on('click', lambda cid=conv_id: self._handle_load_chat(cid)):
-                        # Add hover effect via inline style
-                        ui.add_head_html("""
-                        <style>
-                        .nicegui-content .q-card:hover {
-                            background-color: var(--bg-accent) !important;
-                            border-color: var(--accent-color) !important;
-                        }
-                        </style>
-                        """)
+                        ui.add_head_html(".nicegui-content .q-card:hover { background-color: var(--bg-accent) !important; border-color: var(--accent-color) !important; }")
                         ui.label(conv['title']).classes('text-sm font-medium text-gray-200 truncate')
                         ui.label(conv['updated_at'][:10]).classes('text-xs text-gray-500 mt-1')
 
     def set_optimistic_state(self, provider_id: str):
         """
-        OPTIMISTIC UI: Immediately set visual state to 'Connecting...'
-        Called by Settings Dialog BEFORE the async initialization finishes.
-        This provides instant feedback on slow systems (Windows).
+        [B1] CONNECTING State
+        Called by Settings Dialog
         """
-        # Set Badge to Connecting (Spinner)
-        self.provider_status_icon.name = 'sync'
-        self.provider_status_icon.props('color=yellow')
-        self.provider_status_icon.classes('text-yellow-400 animate-spin', remove='text-green-400 text-red-500 text-orange-400 animate-pulse text-gray-500')
-        
-        self.provider_status_label.text = f'Connecting: {provider_id}...'
-        self.provider_status_label.classes('text-yellow-400', remove='text-gray-300 text-red-400 text-orange-400')
-        self.provider_status_label.update()
-        self.provider_status_icon.update()
+        # [B1] Connecting
+        self._update_status_badge('blue', f'Connecting to {provider_id}...', 'sync', animate='spin')
